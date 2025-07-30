@@ -12,6 +12,8 @@ import datetime
 import threading
 import os
 
+#切换工作目录
+os.chdir(os.path.dirname(__file__))
 main_Windows = tk.Tk()
 main_Windows.geometry("800x600")
 main_Windows.resizable(0,0)
@@ -412,24 +414,27 @@ def audio_recording(only_once = 0):
 def volumn_timer():
     #音量计时器，达到音量自动计时，低于音量由停顿计时器（下一个函数）调配
     global is_volumn_timer_working, real_second, really_read_time_label
-    while True:
-        with timer_lock:
-            if not is_volumn_timer_working:
-                break
-        real_second += 1
-        volumn_hours = real_second // 3600
-        volumn_minutes = (real_second - 3600 * volumn_hours) // 60
-        volumn_seconds = real_second - 3600 * volumn_hours - 60 * volumn_minutes
-        if volumn_hours < 10:
-            volumn_hours = "0" + str(volumn_hours)
-        if volumn_minutes < 10:
-            volumn_minutes = "0" + str(volumn_minutes)
-        if volumn_seconds < 10:
-            volumn_seconds = "0" + str(volumn_seconds)
-        # 确保 really_read_time_label 仍然存在
-        if really_read_time_label.winfo_exists():
-            really_read_time_label.config(text=f"实际朗读：{volumn_hours}:{volumn_minutes}:{volumn_seconds}")
-        time.sleep(1)
+    try:
+        while True:
+            with timer_lock:
+                if not is_volumn_timer_working:
+                    break
+            real_second += 1
+            volumn_hours = real_second // 3600
+            volumn_minutes = (real_second - 3600 * volumn_hours) // 60
+            volumn_seconds = real_second - 3600 * volumn_hours - 60 * volumn_minutes
+            if volumn_hours < 10:
+                volumn_hours = "0" + str(volumn_hours)
+            if volumn_minutes < 10:
+                volumn_minutes = "0" + str(volumn_minutes)
+            if volumn_seconds < 10:
+                volumn_seconds = "0" + str(volumn_seconds)
+            # 确保 really_read_time_label 仍然存在
+            if really_read_time_label.winfo_exists():
+                really_read_time_label.config(text=f"实际朗读：{volumn_hours}:{volumn_minutes}:{volumn_seconds}")
+            time.sleep(1)
+    except Exception as e:
+        messagebox.showerror(message=f"出错了！\n{e}\请重启软件！")
 def pause_timer_():
     #停顿计时器，用来记录停顿时长，超过一个范围自动停止实际朗读计时，同时关闭自己
     global stop_max_duration,is_pause_timer_working,is_volumn_timer_working,tips_label,if_pause_one_time
