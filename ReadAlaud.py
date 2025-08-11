@@ -491,6 +491,9 @@ def load_history():
     #载入数据，最多十个
     global tree_table,last_name
     list_history = os.listdir("./data")
+    get_children = tree_table.get_children()
+    for i in get_children:
+        tree_table.delete(i)
     if len(list_history) <= 10 and len(list_history) != 0:
         last_name = list_history[len(list_history) - 1]
         for i in range(len(list_history)):
