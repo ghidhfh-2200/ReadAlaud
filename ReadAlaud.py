@@ -1,4 +1,3 @@
-from ast import Index
 import time
 import tkinter as tk
 from tkinter import ttk
@@ -11,6 +10,7 @@ import numpy as np
 import datetime
 import threading
 import os
+import pyttsx3
 
 #切换工作目录
 os.chdir(os.path.dirname(__file__))
@@ -47,8 +47,8 @@ def save_settings():
         get_password = base64.b64encode(password.get().encode("utf-8")).decode("utf-8")
     else:
         get_password = ""
-    get_stop_duration = stop_furayion_number.get()
     try:
+        get_stop_duration = int(stop_furayion_number.get())
         with open("./settings.json", "r") as f:
             read_json = json.load(f)
         read_json['goal'] = time
@@ -63,6 +63,8 @@ def save_settings():
         messagebox.showerror(message="找不到 settings.json\n请不要随意移动设置文件!", title="错误！") 
     except json.decoder.JSONDecodeError:
         messagebox.showerror(message="无效的JSON格式！\n请不要随意修改设置文件的内容！")
+    except ValueError:
+        messagebox.showerror(message="数值只能为整数！")
 def generate_settings_gui(goal, db, stop_dur, if_pass, passw):
     global password,stop_furayion_number, password,settings_window
     settings_window = tk.Toplevel(main_Windows)
@@ -104,7 +106,7 @@ def generate_settings_gui(goal, db, stop_dur, if_pass, passw):
 
     stop_duration = tk.Label(master=settings_window, text="停顿间隔", font=("仿宋", 15))
     stop_duration.place(x=10, y=90)
-    stop_furayion_number = tk.Entry(master=settings_window, width=5,)
+    stop_furayion_number = tk.Entry(master=settings_window, width=5)
     stop_furayion_number.place(x=110, y=90)
     stop_furayion_number.insert(0, stop_dur)
     seconds_label = tk.Label(master=settings_window, text="秒", font=("仿宋", 15))
@@ -333,7 +335,9 @@ def total_timer():
             total_seconds = "0" + str(total_seconds)
         total_take_time_label.config(text="总用时：" + f"{total_hours}:{total_minutes}:{total_seconds}")
         to_goal_second -= 1
-        if to_goal_second < 0:
+        if to_goal_second == 0:
+            pyttsx3.speak(text="温馨提示：已达到设定目标")
+        if to_goal_second <= 0:
             to_goal_second = 0
         get_to_goal = calculate_hours_minutes_seconds(input_data=to_goal_second)
         to_goal_label.config(text=f"距离目标：{get_to_goal[0]}:{get_to_goal[1]}:{get_to_goal[2]}")
