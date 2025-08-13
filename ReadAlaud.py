@@ -500,7 +500,7 @@ def load_history():
             try:
                 with open(f"./data/{list_history[i]}", "r") as f:
                     read = json.load(f)
-                    tree_table.insert(parent="", values=[list_history[i], read['total'], read['real'], read['to_goal'], read['efficiency']], index=tk.END)
+                    tree_table.insert(parent="", values=[list_history[i].split(".")[0], read['total'], read['real'], read['to_goal'], read['efficiency']], index=tk.END)
             except json.decoder.JSONDecodeError:
                 messagebox.showerror(message=f"文件{list_history[i]}解析错误!请不要修改文件内容！")
     elif len(list_history) > 10:
@@ -509,7 +509,7 @@ def load_history():
             try:
                 with open(f"./data/{list_history[i]}", "r") as f:
                     read = json.load(f)
-                    tree_table.insert(parent="",values=[list_history[i], read['total'], read['real'], read['to_goal'], read['efficiency']],index=tk.END)
+                    tree_table.insert(parent="",values=[list_history[i].split(".")[0], read['total'], read['real'], read['to_goal'], read['efficiency']],index=tk.END)
             except json.decoder.JSONDecodeError:
                 messagebox.showerror(message=f"文件{list_history[i]}解析错误!请不要修改文件内容！")
     else:
@@ -525,7 +525,7 @@ def load_more():
             for i in range(len(splice_list)):
                 with open(f"./data/{splice_list[i]}", "r") as f:
                     read = json.load(f)
-                tree_table.insert(parent="", values=[splice_list[i], read['total'], read['real'], read['to_goal'], read['efficiency']], index=tk.END)
+                tree_table.insert(parent="", values=[splice_list[i].split(".")[0], read['total'], read['real'], read['to_goal'], read['efficiency']], index=tk.END)
         except json.decoder.JSONDecodeError:
                 messagebox.showerror(message=f"文件{splice_list[i]}解析错误!请不要修改文件内容！")
     else:
@@ -533,7 +533,7 @@ def load_more():
             for i in range(10):
                 with open(f"./data/{splice_list[i]}", "r") as f:
                     read = json.load(f)
-                tree_table.insert(parent="", values=[splice_list[i], read['total'], read['real'], read['to_goal'], read['efficiency']], index=tk.END)
+                tree_table.insert(parent="", values=[splice_list[i].split(".")[0], read['total'], read['real'], read['to_goal'], read['efficiency']], index=tk.END)
         except json.decoder.JSONDecodeError:
                 messagebox.showerror(message=f"文件{splice_list[i]}解析错误!请不要修改文件内容！")
 def clear_data():
