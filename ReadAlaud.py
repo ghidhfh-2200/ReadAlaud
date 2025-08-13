@@ -120,6 +120,7 @@ def generate_settings_gui(goal, db, stop_dur, if_pass, passw):
     password.place(x=120, y=130)
     password.config(state=tk.NORMAL)
     password.insert(0, passw)
+    password.config(state=tk.DISABLED)
 
     save_button = tk.Button(master=settings_window, text="保存", width=10, font=("Helvetica", 12, "bold"), command=save_settings)
     save_button.place(x=10, y=170)
@@ -295,9 +296,9 @@ def start_reading_threadings():
     global is_recording,recording_thread,is_total_timer_working
     is_recording = True
     is_total_timer_working = True
-    recording_thread = threading.Thread(target=audio_recording)
+    recording_thread = threading.Thread(target=audio_recording,daemon=True)
     recording_thread.start()
-    total_timer_thread = threading.Thread(target=total_timer)
+    total_timer_thread = threading.Thread(target=total_timer,daemon=True)
     total_timer_thread.start()
 def close_read_window():
     #关闭窗口触发，用于实现自动保存，同时关闭音量采集
@@ -382,10 +383,10 @@ def audio_recording(only_once = 0):
                     if db < dB:
                         if not is_pause_timer_working and if_pause_one_time == 0:
                             is_pause_timer_working = True
-                            threading.Thread(target=pause_timer_).start()
+                            threading.Thread(target=pause_timer_,daemon=True).start()
                         if not is_volumn_timer_working and if_pause_one_time == 0:
                             is_volumn_timer_working = True
-                            threading.Thread(target=volumn_timer).start()
+                            threading.Thread(target=volumn_timer, daemon=True).start()
                     elif db >= dB:
                         if_pause_one_time = 0
                         if is_pause_timer_working:
@@ -411,7 +412,17 @@ def audio_recording(only_once = 0):
             else:
                 db = -100  # 设定一个合理的最小值
             count += 1
-            return db
+            try:
+                return db
+            finally:
+                try:
+                    stream.stop_stream()
+                    stream.close()
+                except:pass
+                try:
+                    p.terminate()
+                except:
+                    pass
     except OSError:
         is_recording = False
         messagebox.showerror(message="无法打开麦克风！请确保你有可用的麦克风!")
@@ -541,7 +552,7 @@ def clear_data():
     list_dir = os.listdir("./data")
     try:
         for i in range(len(list_dir)):
-            os.remove(f"./data/{list_dir[i]}")
+            os.remove(f"./data/{list_dir[i]}.json")
         load_history()
         messagebox.showinfo(message="删除成功！")
     except OSError:
@@ -555,7 +566,7 @@ def clear_selected():
         print(item)
         get_name = item['values'][0]
         try:
-            os.remove(f"./data/{get_name}")
+            os.remove(f"./data/{get_name}.json")
             load_history()
             messagebox.showinfo(message="删除成功！")
         except OSError:
