@@ -11,6 +11,7 @@ import datetime
 import threading
 import os
 import pyttsx3
+import noisereduce as nr
 
 #切换工作目录
 os.chdir(os.path.dirname(__file__))
@@ -159,7 +160,7 @@ def settings():
 def pause_():
     #暂停
     global is_total_timer_working,is_volumn_timer_working,is_pause_timer_working,is_recording,tips_label
-    tips_label.config(text="已暂停")
+    read_windows.after(0, lambda:tips_label.config(text="已暂停"))
     is_total_timer_working = False
     is_volumn_timer_working = False
     is_recording = False
@@ -167,7 +168,7 @@ def pause_():
 def continue_reading():
     #继续朗读
     global is_total_timer_working,is_volumn_timer_working,is_pause_timer_working,is_recording,tips_label
-    tips_label.config(text="正在朗读.....")
+    read_windows.after(0, lambda:tips_label.config(text="正在朗读....."))
     start_reading_threadings()
 def reset_data():
     #重置数据
@@ -334,16 +335,16 @@ def total_timer():
             total_minutes = "0" + str(total_minutes)
         if total_seconds < 10:
             total_seconds = "0" + str(total_seconds)
-        total_take_time_label.config(text="总用时：" + f"{total_hours}:{total_minutes}:{total_seconds}")
+        read_windows.after(0, lambda:total_take_time_label.config(text="总用时：" + f"{total_hours}:{total_minutes}:{total_seconds}"))
         to_goal_second -= 1
         if to_goal_second == 0:
             pyttsx3.speak(text="温馨提示：已达到设定目标")
         if to_goal_second <= 0:
             to_goal_second = 0
         get_to_goal = calculate_hours_minutes_seconds(input_data=to_goal_second)
-        to_goal_label.config(text=f"距离目标：{get_to_goal[0]}:{get_to_goal[1]}:{get_to_goal[2]}")
+        read_windows.after(0, lambda:to_goal_label.config(text=f"距离目标：{get_to_goal[0]}:{get_to_goal[1]}:{get_to_goal[2]}"))
         efficiency_calculate = np.round(real_second / total_second, 3)
-        efficiency_label.config(text=f"效率：{efficiency_calculate}")
+        read_windows.after(0, efficiency_label.config(text=f"效率：{efficiency_calculate}"))
         time.sleep(1)
 def audio_recording(only_once = 0):
     #音量检测函数
@@ -363,17 +364,18 @@ def audio_recording(only_once = 0):
         p = pyaudio.PyAudio()
         stream = p.open(format=pyaudio.paInt16, channels=1, rate=44100, input=True, frames_per_buffer=2048)
         if only_once == 0:
-            tips_label.config(text="音量检测已开启，达到设置阈值后自动开始计时.")
+            read_windows.after(0, lambda: tips_label.config(text="音量检测已开启，达到设置阈值后自动开始计时."))
             while is_recording == True:
                 data = stream.read(2048)
                 audio_data = np.frombuffer(data, dtype=np.int16)
-                fft_data = np.fft.fft(audio_data)
+                reduce_noise = nr.reduce_noise(y=audio_data, sr=44100)
+                fft_data = np.fft.fft(reduce_noise)
                 # 修正频率轴计算
                 freps = np.fft.fftfreq(len(fft_data), 1 / 44100)  # 44100 为采样频率
                 psd = np.abs(fft_data) ** 2 /len(fft_data)
                 power_sum = np.sum(psd[freps >= 10] * freps[freps >= 10]**2)
                 if power_sum > 0:
-                    max_possible_power = (32767 ** 2) * len(audio_data) / 2  # 最大可能功率
+                    max_possible_power = (32767 ** 2) * len(reduce_noise) / 2  # 最大可能功率
                     db = np.around(10 * np.log10(power_sum / max_possible_power) + read_calibration, 1)#read_caliration是补偿值
                 else:
                     db = -100  # 设定一个合理的最小值
@@ -393,7 +395,7 @@ def audio_recording(only_once = 0):
                             is_pause_timer_working = False
                         if not is_volumn_timer_working:
                             is_volumn_timer_working = True
-                            tips_label.config(text="朗读中.....")
+                            read_windows.after(0, lambda:tips_label.config(text="朗读中....."))
                             threading.Thread(target=volumn_timer).start()
                 time.sleep(0.03)
         elif only_once == 1:
@@ -446,7 +448,7 @@ def volumn_timer():
                 volumn_seconds = "0" + str(volumn_seconds)
             # 确保 really_read_time_label 仍然存在
             if really_read_time_label.winfo_exists():
-                really_read_time_label.config(text=f"实际朗读：{volumn_hours}:{volumn_minutes}:{volumn_seconds}")
+                read_windows.after(0, lambda:really_read_time_label.config(text=f"实际朗读：{volumn_hours}:{volumn_minutes}:{volumn_seconds}"))
             time.sleep(1)
     except Exception as e:
         messagebox.showerror(message=f"出错了！\n{e}\请重启软件！")
@@ -462,7 +464,7 @@ def pause_timer_():
                 pause_time += 1
                 if pause_time >= stop_max_duration:
                     if_pause_one_time = 1
-                    tips_label.config(text="音量低于设定值，已自动暂停")
+                    read_windows.after(0,lambda:tips_label.config(text="音量低于设定值，已自动暂停"))
                     is_pause_timer_working = False
                     is_volumn_timer_working = False
             time.sleep(1)
