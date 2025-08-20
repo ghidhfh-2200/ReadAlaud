@@ -336,13 +336,6 @@ def total_timer():
         if total_seconds < 10:
             total_seconds = "0" + str(total_seconds)
         read_windows.after(0, lambda:total_take_time_label.config(text="总用时：" + f"{total_hours}:{total_minutes}:{total_seconds}"))
-        to_goal_second -= 1
-        if to_goal_second == 0:
-            pyttsx3.speak(text="温馨提示：已达到设定目标")
-        if to_goal_second <= 0:
-            to_goal_second = 0
-        get_to_goal = calculate_hours_minutes_seconds(input_data=to_goal_second)
-        read_windows.after(0, lambda:to_goal_label.config(text=f"距离目标：{get_to_goal[0]}:{get_to_goal[1]}:{get_to_goal[2]}"))
         efficiency_calculate = np.round(real_second / total_second, 3)
         read_windows.after(0, efficiency_label.config(text=f"效率：{efficiency_calculate}"))
         time.sleep(1)
@@ -446,6 +439,13 @@ def volumn_timer():
                 volumn_minutes = "0" + str(volumn_minutes)
             if volumn_seconds < 10:
                 volumn_seconds = "0" + str(volumn_seconds)
+            to_goal_second -= 1
+            if to_goal_second == 0:
+                pyttsx3.speak(text="温馨提示：已达到设定目标")
+            if to_goal_second <= 0:
+                to_goal_second = 0
+            get_to_goal = calculate_hours_minutes_seconds(input_data=to_goal_second)
+            read_windows.after(0, lambda:to_goal_label.config(text=f"距离目标：{get_to_goal[0]}:{get_to_goal[1]}:{get_to_goal[2]}"))
             # 确保 really_read_time_label 仍然存在
             if really_read_time_label.winfo_exists():
                 read_windows.after(0, lambda:really_read_time_label.config(text=f"实际朗读：{volumn_hours}:{volumn_minutes}:{volumn_seconds}"))
@@ -469,7 +469,7 @@ def pause_timer_():
                     is_volumn_timer_working = False
             time.sleep(1)
 def calculate_calibration():
-    #麦克风校准函数，调用之前的声音监测函数，only_once表示只测一次，与设定额的当前环境音量相减，得到补偿值
+    #麦克风校准函数，调用之前的声音监测函数，only_once表示只测一次，与设定的当前环境音量相减，得到补偿值
     get_db = audio_recording(only_once=1)
     calibration_num =float(set_calibration_var.get()) - get_db
     try:
